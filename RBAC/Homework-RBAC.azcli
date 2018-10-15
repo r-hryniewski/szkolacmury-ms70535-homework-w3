@@ -1,0 +1,5 @@
+### Create role definition
+az role definition create --role-definition Homework-RBAC.json
+
+### Delete role definition
+# az role definition delete -n "/subscriptions/ddba44a2-c454-4d9f-8a59-89a2de167a9c/providers/Microsoft.Authorization/roleDefinitions/c58a3051-cfd8-4bb4-b748-11c30d6241a8"

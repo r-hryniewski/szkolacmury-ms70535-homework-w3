@@ -1,0 +1,218 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminname": {
+            "type": "string"
+        },
+        "adminpass": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "network-security-group-name": "rh-nsg",
+        "vm1-name": "rh-ubuntu-1",
+        "vm2-name": "rh-ubuntu-2",
+        "vnet": "[resourceId('Microsoft.Network/virtualNetworks','rh-vnet')]",
+        "subnet1": "[concat(variables('vnet'),'/subnets/subnet1')]",
+        "subnet2": "[concat(variables('vnet'),'/subnets/subnet2')]",
+        "subnet1name": "[concat('sn1', variables('vnet'))]",
+        "subnet2name": "[concat('sn2', variables('vnet'))]",
+        "ni1": "[concat('ni', variables('vm1-name'))]",
+        "ni2": "[concat('ni', variables('vm2-name'))]",
+        "publicip1": "[concat('pubip', variables('vm1-name'))]",
+        "publicip2": "[concat('pubip', variables('vm2-name'))]",
+        "dns1": "[concat('dns', variables('vm1-name'))]",
+        "dns2": "[concat('dns', variables('vm2-name'))]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2015-01-01",
+            "name": "nsgtemplate",
+            "type": "Microsoft.Resources/deployments",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "TODO: Paste after git push"
+                },
+                "parameters": {
+                    "network-security-group-name": {
+                        "value": "[variables('network-security-group-name')]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "vmtemplate",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces',variables('ni1'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "TODO: Paste after git push"
+                },
+                "parameters": {
+                    "vm-name": {
+                        "value": "[variables('vm1-name')]"
+                    },
+                    "adminname": {
+                        "value": "[parameters('adminname')]"
+                    },
+                    "adminpass": {
+                        "value": "[parameters('adminpass')]"
+                    },
+                    "vm-nic": {
+                        "value": "[resourceId('Microsoft.Network/networkInterfaces',variables('ni1'))]"
+                    }
+                }
+            }
+        },
+        {
+            "name": "vm2template",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2015-01-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces',variables('ni2'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "contentVersion": "1.0.0.0",
+                    "uri": "TODO: Paste after git push"
+                },
+                "parameters": {
+                    "vm-name": {
+                        "value": "[variables('vm2-name')]"
+                    },
+                    "adminname": {
+                        "value": "[parameters('adminname')]"
+                    },
+                    "adminpass": {
+                        "value": "[parameters('adminpass')]"
+                    },
+                    "vm-nic": {
+                        "value": "[resourceId('Microsoft.Network/networkInterfaces',variables('ni2'))]"
+                    }
+                }
+            }
+        },
+        
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicip1')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dns1')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[variables('publicip2')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('dns2')]"
+                }
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/virtualNetworks",
+            "name": "vnets",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[concat('Microsoft.Resources/deployments/','nsgtemplate')]"
+            ],
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnet1name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/25",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('network-security-group-name'))]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "[variables('subnet2name')]",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/25",
+                            "networkSecurityGroup": {
+                                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('network-security-group-name'))]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('ni1')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicip1'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/', 'vnets')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ip1cfg",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicip1'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnet1')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "2016-03-30",
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[variables('ni2')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicip2'))]",
+                "[resourceId('Microsoft.Network/virtualNetworks/', 'vnets')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ip2cfg",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicip2'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnet2')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -1,0 +1,8 @@
+{
+        "pattern": {
+            "type": "String",
+            "metadata": {
+                "description": "Pattern contraint for resource names. Use star as wildcard"
+            }
+        }
+}

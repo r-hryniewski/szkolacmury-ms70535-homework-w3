@@ -1,0 +1,10 @@
+{        "if": {
+            "not": {
+                "field": "name",
+                "like": "[parameters('pattern')]"
+            }
+        },
+        "then": {
+            "effect": "deny"
+        }
+    }

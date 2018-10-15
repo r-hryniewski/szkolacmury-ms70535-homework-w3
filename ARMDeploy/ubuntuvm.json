@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminname": { "type": "string" },
+        "adminpass": { "type": "securestring" },
+        "vm-name": { "type": "string" },
+        "vm-nic": { "type": "string" },
+        "ubuntu-os-version": {
+            "type": "string",
+            "defaultValue": "18.04-LTS"
+        }
+    },
+    "variables": {
+        "imagePublisher": "Canonical",
+        "imageOffer": "UbuntuServer",
+        "vm-size": "Standard_B1ms",
+        "vm-os-disk-name": "[concat(parameters('vm-name'), '-disk')]"
+    },
+    "resources": [
+        {
+            "apiVersion": "2016-04-30-preview",
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[parameters('vm-name')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+              "hardwareProfile": { "vmSize": "[variables('vm-size')]" },
+              "osProfile": {
+                "computerName": "[parameters('vm-name')]",
+                "adminUsername": "[parameters('adminname')]",
+                "adminPassword": "[parameters('adminpass')]"
+              },
+              "storageProfile": {
+                "imageReference": {
+                  "publisher": "[variables('imagePublisher')]",
+                  "offer": "[variables('imageOffer')]",
+                  "sku": "[parameters('ubuntu-os-version')]",
+                  "version": "latest"
+                },
+                "osDisk": {
+                  "name": "[variables('vm-os-disk-name')]",
+                  "caching": "ReadWrite",
+                  "createOption": "FromImage"
+                }
+              },
+              "networkProfile": {
+                "networkInterfaces": [
+                  {
+                    "id": "[parameters('vm-nic')]"
+                  }
+                ]
+              }
+            }
+          }
+    ],
+    "outputs": {}
+}

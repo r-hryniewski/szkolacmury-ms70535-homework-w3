@@ -1,0 +1,6 @@
+CREATING DEFINITION
+
+az policy definition create -n nameConstraint     --rules namepolicy-rule.json     --params namepolicy-parameters.json     --display-name "Name constraint with wildcard"     --description "Deny for resources that does not match name condition"     --mode Indexed
+
+ASSIGN POLICY
+az policy assignment create --name FeedoNameConstraint --policy nameConstraint --display-name "FeedoPrefixNameConstraint" --scope /subscriptions/ddba44a2-c454-4d9f-8a59-89a2de167a9c/resourceGroups/rh-feedo -p "{'pattern':{'value':'feedo*'}}"az policy assignment create --name FeedoNameConstraint --policy nameConstraint --display-name "FeedoPrefixNameConstraint" --scope /subscriptions/ddba44a2-c454-4d9f-8a59-89a2de167a9c/resourceGroups/rh-feedo -p "{'pattern':{'value':'feedo*'}}"

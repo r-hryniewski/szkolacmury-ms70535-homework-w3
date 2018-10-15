@@ -1,0 +1,1 @@
+az group deployment create --resource-group "Sandbox" --name ARMTest --template-file template.json --parameters @parameters.json
